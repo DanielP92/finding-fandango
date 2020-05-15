@@ -63,7 +63,7 @@ class Images:
                                       'jump': imgs[15:19],
                                       'fall': imgs[24:25]}
 
-            self.current_sprites = self.sprite_dict['idle']
+            self.current_sprites = self.image.sprite_dict['idle']
 
         else:
             pass
@@ -258,7 +258,7 @@ class Player(SpriteWithCoords):
 
         def set_current_sprites(self, key):
             sprites = self.player.sprites
-            sprites.current_sprites = sprites.sprite_dict[key]
+            sprites.current_sprites = sprites.image.sprite_dict[key]
             sprites.step = sprites.counter = 0
 
         def move_right(self):
