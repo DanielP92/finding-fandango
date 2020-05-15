@@ -4,6 +4,7 @@ import pytmx
 
 SCREEN_H = 400
 SCREEN_W = 600
+TERMINAL_VEL = 10
 LAYERS = ["Background", "Foreground", "Water", "Decorations"]
 
 current_dir = os.path.dirname('main.py')
@@ -247,10 +248,10 @@ class Player(SpriteWithCoords):
         def calc_grav(self):
             if self.change_y == 0:
                 self.change_y = 1
-            elif self.change_y >= 15:
-                self.change_y = 15
+            elif self.change_y >= TERMINAL_VEL:
+                self.change_y = TERMINAL_VEL
             else:
-                self.change_y += .35
+                self.change_y += .3
 
         def set_current_sprites(self, key):
             sprites = self.player.sprites
@@ -315,7 +316,7 @@ class Player(SpriteWithCoords):
             background_tile_list = self.player.game_map.tiles.collisions['background']
 
             for sprite in background_tile_list:
-                if self.clip(self.x, (self.y + self.height - 15), self.width, 15).colliderect(sprite.collision_area):
+                if self.clip(self.x, (self.y + self.height - TERMINAL_VEL), self.width, TERMINAL_VEL).colliderect(sprite.collision_area):
                     if self.player.movement.change_y > 0:
                         self.bottom = sprite.rect.top
                     elif self.player.movement.change_y < 0:
