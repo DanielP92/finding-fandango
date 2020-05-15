@@ -247,7 +247,6 @@ class Player(SpriteWithCoords):
         def update(self):
             self.calc_grav()
             self.player.hitbox.x += self.change_x
-            print(self.change_y)
 
         def calc_grav(self):
             if self.change_y == 0:
