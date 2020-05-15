@@ -129,6 +129,24 @@ class Map:
                 self.collision_area = pg.sprite.Sprite()
                 self.collision_area.rect = self.rect.clip(self.x, self.y, self.rect.width, 2)
 
+        class WaterTile(TileSprite):
+            step = 0
+            counter = 0
+
+            def __init__(self, data, *args):
+                super().__init__(*args)
+                self.collision_area = pg.sprite.Sprite()
+                self.collision_area.rect = (0, 0, 0, 0)
+                self.frames = []
+
+            def update(self):
+                self.image = self.frames[self.step]
+                self.counter += 1
+                if self.counter % 25 == 0:
+                    self.step += 1
+                if self.step > len(self.frames) - 1:
+                    self.step = 0
+
         def __init__(self):
             self.tiles = list()
             self.groups = {'background': pg.sprite.Group(),
@@ -199,7 +217,12 @@ class Map:
                     elif layer.name == "Foreground":
                         tile_sprite = self.tiles.ForegroundTile(tile, x * tw, y * th, tw, th)
                         group = self.tiles.groups['foreground']
-                    elif layer.name in ['Water', 'Decorations']:
+                    elif layer.name == 'Water':
+                        tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
+                        group = self.tiles.groups['no_collisions']
+                        if data:
+                            tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
+                    elif layer.name == 'Decorations':
                         tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
                         group = self.tiles.groups['no_collisions']
 
@@ -406,6 +429,7 @@ class Game:
             self.screen.blit(self.background, (0, 0))
             self.check_all_events()
             self.current_map.draw(self.screen, self.player)
+            self.current_map.tiles.groups['no_collisions'].update()
             self.player.update()
             self.clock.tick(60)
             pg.display.flip()
