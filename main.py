@@ -302,8 +302,6 @@ class Player(SpriteWithCoords):
                         self.left = sprite.rect.right
                         self.player.movement.stop()
 
-            foreground_tile_list = self.player.game_map.tiles.collisions['foreground']
-
             self.y += self.player.movement.change_y
 
             foreground_tile_list = self.player.game_map.tiles.collisions['foreground']
