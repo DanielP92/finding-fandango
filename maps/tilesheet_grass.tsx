@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.2" tiledversion="1.3.4" name="tilesheet_grass" tilewidth="16" tileheight="16" tilecount="224" columns="16">
- <tileoffset x="-1" y="-1"/>
  <image source="../../../../../Downloads/Maytch 16x16 Tilesets-2/tilesheet_grass.png" trans="000000" width="256" height="224"/>
  <tile id="0" type="walkable"/>
  <tile id="1" type="walkable"/>
  <tile id="2" type="walkable"/>
- <tile id="3" type="block"/>
+ <tile id="3" type="walkable"/>
  <tile id="4" type="walkable"/>
  <tile id="5" type="walkable"/>
  <tile id="6" type="walkable"/>
@@ -15,17 +14,26 @@
  <tile id="16" type="fallable"/>
  <tile id="17" type="fallable"/>
  <tile id="18" type="fallable"/>
- <tile id="19" type="block"/>
+ <tile id="19" type="walkable"/>
  <tile id="20" type="fallable"/>
  <tile id="21" type="fallable"/>
  <tile id="22" type="fallable"/>
  <tile id="23" type="fallable"/>
  <tile id="24" type="fallable"/>
  <tile id="25" type="fallable"/>
- <tile id="35" type="block"/>
- <tile id="48" type="block"/>
- <tile id="49" type="block"/>
- <tile id="50" type="block"/>
+ <tile id="32" type="fallable"/>
+ <tile id="33" type="fallable"/>
+ <tile id="34" type="fallable"/>
+ <tile id="35" type="walkable"/>
+ <tile id="36" type="fallable"/>
+ <tile id="37" type="fallable"/>
+ <tile id="38" type="fallable"/>
+ <tile id="39" type="fallable"/>
+ <tile id="40" type="fallable"/>
+ <tile id="41" type="fallable"/>
+ <tile id="48" type="walkable"/>
+ <tile id="49" type="walkable"/>
+ <tile id="50" type="walkable"/>
  <tile id="51" type="block"/>
  <tile id="52" type="fallable"/>
  <tile id="53" type="fallable"/>
@@ -60,7 +68,7 @@
  <tile id="112" type="walkable"/>
  <tile id="113" type="walkable"/>
  <tile id="114" type="walkable"/>
- <tile id="115" type="block"/>
+ <tile id="115" type="walkable"/>
  <tile id="116" type="walkable"/>
  <tile id="117" type="walkable"/>
  <tile id="118" type="walkable"/>
@@ -70,18 +78,27 @@
  <tile id="128" type="fallable"/>
  <tile id="129" type="fallable"/>
  <tile id="130" type="fallable"/>
- <tile id="131" type="block"/>
+ <tile id="131" type="walkable"/>
  <tile id="132" type="fallable"/>
  <tile id="133" type="fallable"/>
  <tile id="134" type="fallable"/>
  <tile id="135" type="fallable"/>
  <tile id="136" type="fallable"/>
  <tile id="137" type="fallable"/>
- <tile id="147" type="block"/>
- <tile id="160" type="block"/>
- <tile id="161" type="block"/>
- <tile id="162" type="block"/>
- <tile id="163" type="block"/>
+ <tile id="144" type="fallable"/>
+ <tile id="145" type="fallable"/>
+ <tile id="146" type="fallable"/>
+ <tile id="147" type="walkable"/>
+ <tile id="148" type="fallable"/>
+ <tile id="149" type="fallable"/>
+ <tile id="150" type="fallable"/>
+ <tile id="151" type="fallable"/>
+ <tile id="152" type="fallable"/>
+ <tile id="153" type="fallable"/>
+ <tile id="160" type="walkable"/>
+ <tile id="161" type="walkable"/>
+ <tile id="162" type="walkable"/>
+ <tile id="163" type="walkable"/>
  <tile id="165" type="fallable"/>
  <tile id="167" type="fallable"/>
  <tile id="168" type="fallable"/>

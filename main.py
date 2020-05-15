@@ -374,7 +374,7 @@ class Game:
 
     def __init__(self):
         self.current_map = self.all_maps[self.current_map_no]
-        self.player = Player(400, 75, self.current_map, self.screen)
+        self.player = Player(50, 500, self.current_map, self.screen)
         self.clock = pg.time.Clock()
 
     def check_all_events(self):
