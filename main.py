@@ -24,17 +24,26 @@ class LayerError(Exception):
 
 
 class Images:
+    counter = 0
+    step = 0
+
+    class Spritesheet:
+        def __init__(self, filename):
+            self.sheet = pg.image.load(os.path.join(current_dir + 'assets/', filename))
+            self.dimensions = [self.sheet.get_width(), self.sheet.get_height()]
+            self.all_sprites = []
+            self.sprite_dict = {}
+
+        def get_subsurfaces(self, width, height):
+            for i in range(0, self.dimensions[1], height):
+                for j in range(0, self.dimensions[0], width):
+                    self.all_sprites.append(self.sheet.subsurface(j, i, width, height))
+
     def __init__(self, entity, screen, filename):
         self.entity = entity
         self.screen = screen
-        self.sheet = pg.image.load(os.path.join(current_dir + 'assets/', filename))
-        self.dimensions = [self.sheet.get_width(), self.sheet.get_height()]
-        self.image_list = []
-        self.sprite_dict = {}
+        self.image = self.Spritesheet(filename)
         self.current_sprites = []
-        self.counter = 0
-        self.step = 0
-        print(self.dimensions)
         self.set_sprites()
 
     def get_offset(self):
@@ -42,22 +51,17 @@ class Images:
                 (self.entity.hitbox.y + (self.entity.hitbox.height / 2) - (self.entity.image.get_height() / 2)) - self.entity.hitbox.y]
 
     def set_sprites(self):
-        width, height = 0, 0
-
-        def get_subsurfaces():
-            for i in range(0, self.dimensions[1], height):
-                for j in range(0, self.dimensions[0], width):
-                    self.image_list.append(self.sheet.subsurface(j, i, width, height))
+        imgs = self.image.all_sprites
 
         if isinstance(self.entity, Player):
             width, height = 50, 37
-            get_subsurfaces()
+            self.image.get_subsurfaces(width, height)
 
-            self.sprite_dict = {'idle': [self.image_list[0], self.image_list[0], self.image_list[1], self.image_list[2],
-                                         self.image_list[2], self.image_list[2], self.image_list[3], self.image_list[0]],
-                                'run': self.image_list[8:14],
-                                'jump': self.image_list[15:19],
-                                'fall': self.image_list[24:25]}
+            self.image.sprite_dict = {'idle': [imgs[0], imgs[0], imgs[1], imgs[2],
+                                               imgs[2], imgs[2], imgs[3], imgs[0]],
+                                      'run': imgs[8:14],
+                                      'jump': imgs[15:19],
+                                      'fall': imgs[24:25]}
 
             self.current_sprites = self.sprite_dict['idle']
 
@@ -67,15 +71,15 @@ class Images:
     def update(self):
         no_of_sprites = len(self.current_sprites) - 1
         self.entity.image = self.current_sprites[self.counter]
-        print(no_of_sprites, self.counter)
         self.step += 1
+
         if self.counter < no_of_sprites and self.step >= 6:
             self.counter += 1
             self.step = 0
         elif self.counter >= no_of_sprites and self.step >= 6:
             self.counter = 0
             self.step = 0
-        print(self.get_offset())
+
 
 class Map:
 
