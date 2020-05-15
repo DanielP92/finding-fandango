@@ -292,10 +292,10 @@ class Player(SpriteWithCoords):
                 if self.colliderect(sprite.collision_area):
                     if self.player.movement.change_x > 0:
                         self.right = sprite.rect.left
-                        self.player.movement.change__x = 0
+                        self.player.movement.stop()
                     elif self.player.movement.change_x < 0:
                         self.left = sprite.rect.right
-                        self.player.movement.change_x = 0
+                        self.player.movement.stop()
 
             foreground_tile_list = self.player.game_map.tiles.collisions['foreground']
 
