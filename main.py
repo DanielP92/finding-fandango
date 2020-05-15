@@ -46,6 +46,9 @@ class Images:
         self.current_sprites = []
         self.set_sprites()
 
+    def reset_counter(self):
+        self.counter, self.step = 0, 0
+
     def get_offset(self):
         return [(self.entity.hitbox.x + (self.entity.hitbox.width / 2) - (self.entity.image.get_width() / 2)) - self.entity.hitbox.x,
                 (self.entity.hitbox.y + (self.entity.hitbox.height / 2) - (self.entity.image.get_height() / 2)) - self.entity.hitbox.y]
@@ -60,15 +63,26 @@ class Images:
             self.image.sprite_dict = {'idle': [imgs[0], imgs[0], imgs[1], imgs[2],
                                                imgs[2], imgs[2], imgs[3], imgs[0]],
                                       'run': imgs[8:14],
-                                      'jump': imgs[15:19],
-                                      'fall': imgs[24:25]}
-
-            self.current_sprites = self.image.sprite_dict['idle']
+                                      'jump': imgs[15:22],
+                                      'fall': imgs[23:24]}
 
         else:
             pass
 
+    def get_current_sprites(self):
+        if isinstance(self.entity, Player):
+            if self.entity.movement.is_moving() and self.entity.movement.change_y == 1:
+                self.current_sprites = self.image.sprite_dict['run']
+            elif self.entity.movement.is_jumping():
+                self.current_sprites = self.image.sprite_dict['jump']
+            elif self.entity.movement.is_falling():
+                self.reset_counter()
+                self.current_sprites = self.image.sprite_dict['fall']
+            else:
+                self.current_sprites = self.image.sprite_dict['idle']
+
     def update(self):
+        self.get_current_sprites()
         no_of_sprites = len(self.current_sprites) - 1
         self.entity.image = self.current_sprites[self.counter]
         self.step += 1
@@ -235,6 +249,12 @@ class Player(SpriteWithCoords):
             self.change_x = 0
             self.change_y = 0
 
+        def reset_animation_counter(func):
+            def wrapper(self):
+                self.player.sprites.reset_counter()
+                func(self)
+            return wrapper
+
         def is_moving(self):
             return self.change_x != 0
 
@@ -242,7 +262,7 @@ class Player(SpriteWithCoords):
             return self.change_y < 0
 
         def is_falling(self):
-            return self.change_y > 0
+            return self.change_y > 1
 
         def update(self):
             self.calc_grav()
@@ -256,28 +276,23 @@ class Player(SpriteWithCoords):
             else:
                 self.change_y += .3
 
-        def set_current_sprites(self, key):
-            sprites = self.player.sprites
-            sprites.current_sprites = sprites.image.sprite_dict[key]
-            sprites.step = sprites.counter = 0
-
+        @reset_animation_counter
         def move_right(self):
             self.flip = False
             self.change_x = 2
-            self.set_current_sprites('run')
 
+        @reset_animation_counter
         def move_left(self):
             self.flip = True
             self.change_x = -2
-            self.set_current_sprites('run')
 
+        @reset_animation_counter
         def stop(self):
             self.change_x = 0
-            self.set_current_sprites('idle')
 
+        @reset_animation_counter
         def jump(self):
-            self.change_y = -6
-            self.set_current_sprites('jump')
+            self.change_y = -7
 
     class Hitbox(BaseHitbox):
         def __init__(self, player, *args):
