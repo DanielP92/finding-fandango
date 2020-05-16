@@ -151,7 +151,8 @@ class Map:
             self.tiles = list()
             self.groups = {'background': pg.sprite.Group(),
                            'foreground': pg.sprite.Group(),
-                           'no_collisions': pg.sprite.Group(),
+                           'water': pg.sprite.Group(),
+                           'decorations': pg.sprite.Group()
                            }
             self.collisions = {'background': pg.sprite.Group(),
                                'foreground': pg.sprite.Group(),
@@ -219,12 +220,12 @@ class Map:
                         group = self.tiles.groups['foreground']
                     elif layer.name == 'Water':
                         tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
-                        group = self.tiles.groups['no_collisions']
+                        group = self.tiles.groups['water']
                         if data:
                             tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
                     elif layer.name == 'Decorations':
                         tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
-                        group = self.tiles.groups['no_collisions']
+                        group = self.tiles.groups['decorations']
 
                     if tile and tile_sprite:
                         self.tiles.add_to(tile_sprite, group)
@@ -429,7 +430,7 @@ class Game:
             self.screen.blit(self.background, (0, 0))
             self.check_all_events()
             self.current_map.draw(self.screen, self.player)
-            self.current_map.tiles.groups['no_collisions'].update()
+            self.current_map.tiles.groups['water'].update()
             self.player.update()
             self.clock.tick(60)
             pg.display.flip()
