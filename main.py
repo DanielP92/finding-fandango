@@ -2,13 +2,17 @@ import os
 import pygame as pg
 import pytmx
 
+# constants
 SCREEN_H = 400
 SCREEN_W = 600
 TERMINAL_VEL = 10
 LAYERS = ["Background", "Foreground", "Water", "Decorations"]
 
+# directories
 current_dir = os.path.dirname('main.py')
-bg_file = os.path.join(current_dir + 'assets/', '119991.png')
+map_dir = os.path.join(current_dir, 'maps/')
+asset_dir = os.path.join(current_dir, 'assets/')
+font_dir = os.path.join(asset_dir, 'fonts/')
 
 
 class SpriteWithCoords(pg.sprite.Sprite):
@@ -29,7 +33,7 @@ class Images:
 
     class Spritesheet:
         def __init__(self, filename):
-            self.sheet = pg.image.load(os.path.join(current_dir + 'assets/', filename))
+            self.sheet = pg.image.load(os.path.join(current_dir + 'assets/', filename)).convert_alpha()
             self.dimensions = [self.sheet.get_width(), self.sheet.get_height()]
             self.all_sprites = []
             self.sprite_dict = {}
@@ -140,7 +144,7 @@ class Map:
                 self.frames = []
 
             def update(self):
-                self.image = self.frames[self.step]
+                self.image = self.frames[self.step].convert_alpha()
                 self.counter += 1
                 if self.counter % 25 == 0:
                     self.step += 1
@@ -186,7 +190,7 @@ class Map:
             self.camera = pg.Rect(x, y, self.width, self.height)
 
     def __init__(self, filename):
-        self.file = pytmx.load_pygame(os.path.join(current_dir, filename))
+        self.file = pytmx.load_pygame(os.path.join(map_dir, filename))
         self.settings = self.Settings(self.file)
         self.tiles = self.Tiles()
         self.width, self.height = self.settings.get_map_size()
@@ -273,7 +277,7 @@ class Player(SpriteWithCoords):
             self.change_x = 0
             self.change_y = 0
 
-        def reset_animation_counter(func):
+        def animation_reset(func):
             def wrapper(self):
                 self.player.sprites.reset_counter()
                 func(self)
@@ -300,21 +304,21 @@ class Player(SpriteWithCoords):
             else:
                 self.change_y += .3
 
-        @reset_animation_counter
+        @animation_reset
         def move_right(self):
             self.flip = False
             self.change_x = 2
 
-        @reset_animation_counter
+        @animation_reset
         def move_left(self):
             self.flip = True
             self.change_x = -2
 
-        @reset_animation_counter
+        @animation_reset
         def stop(self):
             self.change_x = 0
 
-        @reset_animation_counter
+        @animation_reset
         def jump(self):
             self.change_y = -7
 
@@ -391,9 +395,9 @@ class Player(SpriteWithCoords):
 class Game:
     pg.init()
     screen = pg.display.set_mode(size=(SCREEN_W, SCREEN_H))
-    all_maps = [Map('maps/level-1.tmx')]
+    all_maps = [Map('level-1.tmx')]
     current_map_no = 0
-    background = pg.transform.scale(pg.image.load(bg_file).convert(), (SCREEN_W, SCREEN_H))
+    background = pg.transform.scale(pg.image.load(os.path.join(asset_dir, '119991.png')).convert_alpha(), (SCREEN_W, SCREEN_H))
     done = False
 
     def __init__(self):
