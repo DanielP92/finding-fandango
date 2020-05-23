@@ -1,12 +1,13 @@
 import os
+import sys
 import pygame as pg
 import pytmx
 
 # constants
-SCREEN_H = 400
-SCREEN_W = 600
+SCREEN_H = 600
+SCREEN_W = 850
 TERMINAL_VEL = 10
-LAYERS = ["Background", "Foreground", "Water", "Decorations"]
+LAYERS = ["Background", "Foreground", "Water", "Decorations", "TreeTrunk", "TreeTop"]
 
 # directories
 current_dir = os.path.dirname('main.py')
@@ -34,7 +35,7 @@ class Images:
     class Spritesheet:
         def __init__(self, filename):
             self.sheet = pg.image.load(os.path.join(current_dir + 'assets/', filename)).convert_alpha()
-            self.dimensions = [self.sheet.get_width(), self.sheet.get_height()]
+            self.dimensions = (self.sheet.get_width(), self.sheet.get_height())
             self.all_sprites = []
             self.sprite_dict = {}
 
@@ -118,6 +119,7 @@ class Map:
                 super().__init__(x, y)
                 self.image = tile
                 self.rect = pg.Rect(self.x, self.y, width, height)
+                self.size = (width, height)
                 self.collision_area = pg.sprite.Sprite()
                 self.collision_area.rect = (0, 0, 0, 0)
 
@@ -227,7 +229,7 @@ class Map:
                         group = self.tiles.groups['water']
                         if data:
                             tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
-                    elif layer.name == 'Decorations':
+                    elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
                         tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
                         group = self.tiles.groups['decorations']
 
@@ -392,9 +394,37 @@ class Player(SpriteWithCoords):
         self.sprites.update()
 
 
+class Menu:
+    def __init__(self):
+        self.title_font = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 42)
+        self.subtitle_font = pg.font.Font(os.path.join(font_dir, 'Raleway-Medium.ttf'), 24)
+        self.body_font = pg.font.Font(os.path.join(font_dir, 'Raleway-Light.ttf'), 18)
+        self.show = True
+
+    def title_screen(self, screen):
+        while self.show:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.show = False
+                    sys.exit()
+
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_RETURN:
+                        self.show = False
+
+            title = self.title_font.render("Finding Fandango", True, (150, 0, 100))
+            subt = self.subtitle_font.render("A short platforming adventure...", True, (100, 0, 150))
+            desc = self.body_font.render("Press Enter to start", True, (100, 0, 150))
+
+            screen.blit(title, (SCREEN_W / 2 - (title.get_width() / 2), SCREEN_H / 3 - (title.get_height() / 2)))
+            screen.blit(subt, (SCREEN_W / 2 - (subt.get_width() / 2), SCREEN_H / 2 - (subt.get_height() / 2)))
+            screen.blit(desc, (SCREEN_W / 2 - (desc.get_width() / 2), SCREEN_H / 2 + (subt.get_height() / 2)))
+            pg.display.update()
+
+
 class Game:
     pg.init()
-    screen = pg.display.set_mode(size=(SCREEN_W, SCREEN_H))
+    screen = pg.display.set_mode((SCREEN_W, SCREEN_H), pg.SCALED, 32)
     all_maps = [Map('level-1.tmx')]
     current_map_no = 0
     background = pg.transform.scale(pg.image.load(os.path.join(asset_dir, '119991.png')).convert_alpha(), (SCREEN_W, SCREEN_H))
@@ -404,6 +434,7 @@ class Game:
         self.current_map = self.all_maps[self.current_map_no]
         self.player = Player(50, 500, self.current_map, self.screen)
         self.clock = pg.time.Clock()
+        self.menu = Menu()
 
     def check_all_events(self):
         for event in pg.event.get():
@@ -430,6 +461,7 @@ class Game:
                 self.player.movement.stop()
 
     def main_loop(self):
+        self.menu.title_screen(self.screen)
         while not self.done:
             self.screen.blit(self.background, (0, 0))
             self.check_all_events()
