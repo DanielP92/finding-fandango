@@ -4,8 +4,8 @@ import pygame as pg
 import pytmx
 
 # constants
-SCREEN_H = 600
-SCREEN_W = 850
+SCREEN_H = 450
+SCREEN_W = 800
 TERMINAL_VEL = 10
 LAYERS = ["Background", "Foreground", "Water", "Decorations", "TreeTrunk", "TreeTop"]
 
@@ -411,15 +411,17 @@ class Menu:
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_RETURN:
                         self.show = False
-
-            title = self.title_font.render("Finding Fandango", True, (150, 0, 100))
-            subt = self.subtitle_font.render("A short platforming adventure...", True, (100, 0, 150))
-            desc = self.body_font.render("Press Enter to start", True, (100, 0, 150))
-
-            screen.blit(title, (SCREEN_W / 2 - (title.get_width() / 2), SCREEN_H / 3 - (title.get_height() / 2)))
-            screen.blit(subt, (SCREEN_W / 2 - (subt.get_width() / 2), SCREEN_H / 2 - (subt.get_height() / 2)))
-            screen.blit(desc, (SCREEN_W / 2 - (desc.get_width() / 2), SCREEN_H / 2 + (subt.get_height() / 2)))
+            self.draw(screen)
             pg.display.update()
+
+    def draw(self, screen):
+        title = self.title_font.render("Finding Fandango", True, (150, 0, 100))
+        subt = self.subtitle_font.render("A short platforming adventure...", True, (100, 0, 150))
+        desc = self.body_font.render("Press Enter to start", True, (100, 0, 150))
+
+        screen.blit(title, (SCREEN_W / 2 - (title.get_width() / 2), SCREEN_H / 3 - (title.get_height() / 2)))
+        screen.blit(subt, (SCREEN_W / 2 - (subt.get_width() / 2), SCREEN_H / 2 - (subt.get_height() / 2)))
+        screen.blit(desc, (SCREEN_W / 2 - (desc.get_width() / 2), SCREEN_H / 2 + (subt.get_height() / 2)))
 
 
 class Game:
