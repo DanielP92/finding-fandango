@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.2" tiledversion="1.3.4" name="tilesheet_grass" tilewidth="16" tileheight="16" tilecount="224" columns="16">
- <image source="../../../../../Downloads/Maytch 16x16 Tilesets-2/tilesheet_grass.png" trans="000000" width="256" height="224"/>
+ <image source="../../../../../Downloads/Maytch 16x16 Tilesets-2/tilesheet_grass.png" width="256" height="224"/>
  <tile id="0" type="walkable"/>
  <tile id="1" type="walkable"/>
  <tile id="2" type="walkable"/>
