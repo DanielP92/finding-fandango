@@ -101,6 +101,7 @@ class Images:
 
 
 class Map:
+    background = ParallaxBackground()
 
     class Settings:
         def __init__(self, file):
@@ -422,6 +423,14 @@ class Menu:
         screen.blit(title, (SCREEN_W / 2 - (title.get_width() / 2), SCREEN_H / 3 - (title.get_height() / 2)))
         screen.blit(subt, (SCREEN_W / 2 - (subt.get_width() / 2), SCREEN_H / 2 - (subt.get_height() / 2)))
         screen.blit(desc, (SCREEN_W / 2 - (desc.get_width() / 2), SCREEN_H / 2 + (subt.get_height() / 2)))
+
+
+class ParallaxBackground:
+    def __init__(self):
+        self.images = []
+
+    def update(self):
+        pass
 
 
 class Game:
