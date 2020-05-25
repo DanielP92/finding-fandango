@@ -4,8 +4,8 @@ import pygame as pg
 import pytmx
 
 # constants
-SCREEN_H = 450
-SCREEN_W = 800
+SCREEN_H = 500
+SCREEN_W = 850
 TERMINAL_VEL = 10
 LAYERS = ["Background", "Foreground", "Water", "Decorations", "TreeTrunk", "TreeTop"]
 
@@ -14,6 +14,7 @@ current_dir = os.path.dirname('main.py')
 map_dir = os.path.join(current_dir, 'maps/')
 asset_dir = os.path.join(current_dir, 'assets/')
 font_dir = os.path.join(asset_dir, 'fonts/')
+background_dir = os.path.join(map_dir, 'background/')
 
 
 class SpriteWithCoords(pg.sprite.Sprite):
@@ -21,6 +22,34 @@ class SpriteWithCoords(pg.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
+
+
+class ParallaxBackground:
+
+    class BackgroundSprite(SpriteWithCoords):
+        def __init__(self, x, y):
+            super().__init__(x, y)
+            self.image = pg.Surface((0, 0))
+            self.rect = self.image.get_rect()
+            self.speed = 0  # larger speed = slower movement, negative speed will move sprites backwards
+
+    def __init__(self, img_name):
+        self.img_name = img_name
+        self.images = []
+        self.get_image_files()
+
+    def get_image_files(self):
+        x = 7
+        for i in range(6):
+            x -= 1
+            sprite = self.BackgroundSprite(0, 0)
+            filename = self.img_name + str(i) + '.png'
+            sprite.image = pg.image.load(os.path.join(background_dir, filename))
+            w, h = sprite.image.get_width(), sprite.image.get_height()
+            sprite.image = pg.transform.scale(sprite.image, (int(w / 1.2), int(h / 1.2)))
+            sprite.rect = sprite.image.get_rect()
+            sprite.speed = x
+            self.images.append(sprite)
 
 
 class LayerError(Exception):
@@ -101,6 +130,7 @@ class Images:
 
 
 class Map:
+    background = ParallaxBackground('vrstva-')
 
     class Settings:
         def __init__(self, file):
@@ -179,6 +209,8 @@ class Map:
                 x = (entity.hitbox.x + (entity.hitbox.width / 2)) - (entity.image.get_width() / 2)
                 y = entity.hitbox.y - 40
                 return entity.hitbox.move((self.camera.topleft[0] + entity.sprites.get_offset()[0], self.camera.topleft[1] + entity.sprites.get_offset()[1]))
+            elif isinstance(entity, ParallaxBackground.BackgroundSprite):
+                return entity.rect.move((self.camera.bottomleft[0] / entity.speed, self.camera.bottomleft[1] / entity.speed))
             else:
                 return entity.rect.move(self.camera.topleft)
 
@@ -246,6 +278,9 @@ class Map:
             self.tiles.collisions['foreground'].add(sprite)
 
     def draw(self, screen, player):
+        for sprite in self.background.images:
+            screen.blit(sprite.image.convert_alpha(), self.camera.apply(sprite))
+
         for tile in self.tiles.tiles:
             screen.blit(tile.image, self.camera.apply(tile))
 
@@ -429,7 +464,6 @@ class Game:
     screen = pg.display.set_mode((SCREEN_W, SCREEN_H), pg.SCALED, 32)
     all_maps = [Map('level-1.tmx')]
     current_map_no = 0
-    background = pg.transform.scale(pg.image.load(os.path.join(asset_dir, '119991.png')).convert_alpha(), (SCREEN_W, SCREEN_H))
     done = False
 
     def __init__(self):
@@ -463,10 +497,12 @@ class Game:
                 self.player.movement.stop()
 
     def main_loop(self):
+        sky = pg.image.load(os.path.join(background_dir, '1.png'))
+        sky = pg.transform.scale(sky, (SCREEN_W, SCREEN_H))
         self.menu.title_screen(self.screen)
         while not self.done:
-            self.screen.blit(self.background, (0, 0))
             self.check_all_events()
+            self.screen.blit(sky.convert_alpha(), (0, 0))
             self.current_map.draw(self.screen, self.player)
             self.current_map.tiles.groups['water'].update()
             self.player.update()
