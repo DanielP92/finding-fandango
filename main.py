@@ -289,6 +289,8 @@ class Map:
 
 class Player(SpriteWithCoords):
     alive = True
+    lives = 5
+    collectables = 0
 
     class Movement:
         def __init__(self, player):
@@ -347,6 +349,7 @@ class Player(SpriteWithCoords):
             super().__init__(*args)
             self.player = player
             self.active = True
+            self.health = 5
 
         def update(self):
             self.platform_collisions()
@@ -410,6 +413,8 @@ class Player(SpriteWithCoords):
         self.hitbox.update()
         self.movement.update()
         self.sprites.update()
+        if self.lives < 0:
+            self.alive = False
 
 
 class Menu:
