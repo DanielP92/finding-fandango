@@ -288,9 +288,13 @@ class Map:
 
 
 class Player(SpriteWithCoords):
-    alive = True
-    lives = 5
-    collectables = 0
+
+    class Stats:
+        def __init__(self, player):
+            self.player = player
+            self.alive = True
+            self.lives = 5
+            self.collectables = 0
 
     class Movement:
         def __init__(self, player):
@@ -405,6 +409,7 @@ class Player(SpriteWithCoords):
         self.hitbox = self.Hitbox(self, x, y, 15, 32)
         self.image = pg.Surface([self.hitbox.width, self.hitbox.height])
         self.sprites = Images(self, self.screen, 'player-spritesheet.png')
+        self.stats = self.Stats(self)
 
     def get_position(self):
         return self.hitbox.x, self.hitbox.y
@@ -414,7 +419,7 @@ class Player(SpriteWithCoords):
         self.movement.update()
         self.sprites.update()
         if self.lives < 0:
-            self.alive = False
+            self.stats.alive = False
 
 
 class Menu:
