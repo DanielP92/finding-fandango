@@ -35,13 +35,14 @@ class OneUp(Item):
 
 
 class Collectable(Item):
-    def __init__(self, x, y):
+    def __init__(self, x, y, z=1):
         super().__init__(x, y)
+        self.z = z                  # z is the value the collectible is worth,, default value of 1
 
-    def effect(self, plauer):
-        if player.collectables <= 99
-            player.collectables += 1
-        elif player.collectables == 100:
+    def effect(self, player):
+        if player.collectables <= 99:
+            player.collectables += self.z
+        elif player.collectables >= 100:
             player.lives += 1
             player.hitbox.health = 5
             player.collectables = 0
