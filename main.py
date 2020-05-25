@@ -3,6 +3,7 @@ import sys
 import pygame as pg
 import pytmx
 from base_classes import SpriteWithCoords, BaseHitbox
+import items
 
 # constants
 SCREEN_H = 500
