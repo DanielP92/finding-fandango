@@ -2,6 +2,7 @@ import os
 import sys
 import pygame as pg
 import pytmx
+from base_classes import SpriteWithCoords, BaseHitbox
 
 # constants
 SCREEN_H = 500
@@ -15,13 +16,6 @@ map_dir = os.path.join(current_dir, 'maps/')
 asset_dir = os.path.join(current_dir, 'assets/')
 font_dir = os.path.join(asset_dir, 'fonts/')
 background_dir = os.path.join(map_dir, 'background/')
-
-
-class SpriteWithCoords(pg.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.x = x
-        self.y = y
 
 
 class ParallaxBackground:
@@ -290,18 +284,6 @@ class Map:
             screen.blit(player.image, self.camera.apply(player))
 
         self.camera.update(player)
-
-
-class BaseHitbox(pg.Rect):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.active = None
-
-    def is_iframe(self):
-        return self.active is False
-
-    def update(self):
-        pass
 
 
 class Player(SpriteWithCoords):
