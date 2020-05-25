@@ -3,20 +3,33 @@ from base_classes import SpriteWithCoords, BaseHitbox
 
 
 class Item(SpriteWithCoords):
+    step = 0
+    counter = 0
+
     def __init__(self, x, y):
         super().__init__(x, y)
         self.width, self.height = 16, 16
-        self.hitbox = BaseHitbox(self.x, self.y, 10, self.height)
-        self.image = pg.Surface(self.width, self.height)
+        self.rect = BaseHitbox(self.x, self.y, 10, self.height)
+        self.image = pg.Surface((self.width, self.height))
+        self.frames = []
 
     def effect(self):
         pass
 
+    def update(self):
+        self.image = self.frames[self.step].convert_alpha()
+        self.counter += 1
+        if self.counter % 12 == 0:
+            self.step += 1
+        if self.step > len(self.frames) - 1:
+            self.step = 0
+
 
 class Restore(Item):
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, health=0, mana=0):
         super().__init__(x, y)
-        self.z = z                   # z is the amount of health restored
+        self.health = health
+        self.mana = mana
 
     def effect(self, player):
         if player.hitbox.health + self.z > 5:
@@ -30,7 +43,7 @@ class OneUp(Item):
         super().__init__(x, y)
 
     def effect(self, player):
-        player.lives += 1
+        player.stats.lives += 1
         player.hitbox.health = 5
 
 
@@ -40,9 +53,9 @@ class Collectable(Item):
         self.z = z                  # z is the value the collectible is worth,, default value of 1
 
     def effect(self, player):
-        if player.collectables <= 99:
-            player.collectables += self.z
-        elif player.collectables >= 100:
-            player.lives += 1
+        if player.stats.collectables <= 99:
+            player.stats.collectables += self.z
+        elif player.stats.collectables >= 100:
+            player.stats.lives += 1
             player.hitbox.health = 5
-            player.collectables = 0
+            player.stats.collectables = 0
