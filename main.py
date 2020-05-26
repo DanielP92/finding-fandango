@@ -285,6 +285,12 @@ class Map:
                     elif item.image and item.name == '1-up':
                         sprite = items.OneUp(item.x, item.y)
                         sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == 'coin-silver':
+                        sprite = items.Collectable(item.x, item.y)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == 'coin-gold':
+                        sprite = items.Collectable(item.x, item.y, z=2)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
 
                     if sprite:
                         self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
@@ -434,6 +440,7 @@ class Player(SpriteWithCoords):
                     sprite.effect(self.player)
                     sprite.kill()
                     self.player.game_map.tiles.objects.remove(sprite)
+                    print(self.player.stats.collectables, self.player.stats.lives, self.player.hitbox.health, self.player.stats.mana)
 
         def enemy_collisions(self):
             if self.is_iframe():

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.2" tiledversion="1.3.4" name="collectables" tilewidth="24" tileheight="28" tilecount="29" columns="0">
+<tileset version="1.2" tiledversion="1.3.4" name="collectables" tilewidth="24" tileheight="28" tilecount="37" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0" type="healh-potion">
   <image width="13" height="17" source="../../../../../Downloads/Pirate Treasure/Sprites/Red Potion/01.png"/>
@@ -124,5 +124,41 @@
  </tile>
  <tile id="49" type="1-up">
   <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/08.png"/>
+ </tile>
+ <tile id="54" type="coin-gold">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Gold Coin/01.png"/>
+  <animation>
+   <frame tileid="54" duration="150"/>
+   <frame tileid="55" duration="150"/>
+   <frame tileid="56" duration="150"/>
+   <frame tileid="57" duration="150"/>
+  </animation>
+ </tile>
+ <tile id="55">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Gold Coin/02.png"/>
+ </tile>
+ <tile id="56">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Gold Coin/03.png"/>
+ </tile>
+ <tile id="57">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Gold Coin/04.png"/>
+ </tile>
+ <tile id="58" type="coin-silver">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Silver Coin/01.png"/>
+  <animation>
+   <frame tileid="58" duration="150"/>
+   <frame tileid="59" duration="150"/>
+   <frame tileid="60" duration="150"/>
+   <frame tileid="61" duration="150"/>
+  </animation>
+ </tile>
+ <tile id="59">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Silver Coin/02.png"/>
+ </tile>
+ <tile id="60">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Silver Coin/03.png"/>
+ </tile>
+ <tile id="61">
+  <image width="16" height="16" source="../../../../../Downloads/Pirate Treasure/Sprites/Silver Coin/04.png"/>
  </tile>
 </tileset>
