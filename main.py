@@ -384,6 +384,7 @@ class Player(SpriteWithCoords):
 
         def update(self):
             self.platform_collisions()
+            self.item_collisions()
             self.enemy_collisions()
 
         def platform_collisions(self):
@@ -421,6 +422,15 @@ class Player(SpriteWithCoords):
                         pass
 
                     self.player.movement.change_y = 0
+
+        def item_collisions(self):
+            item_list = self.player.game_map.tiles.groups['items']
+
+            for sprite in item_list:
+                if self.colliderect(sprite.rect):
+                    sprite.effect(self.player)
+                    sprite.kill()
+                    self.player.game_map.tiles.objects.remove(sprite)
 
         def enemy_collisions(self):
             if self.is_iframe():
