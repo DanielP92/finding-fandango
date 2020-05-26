@@ -468,6 +468,20 @@ class Player(SpriteWithCoords):
             self.stats.alive = False
 
 
+class StatDisplay:
+    def __init__(self, player):
+        self.dict = {'lives': player.stats.lives,
+                     'collectables': player.stats.collectables
+                     'health': player.hitbox.health,
+                     'mana': player.stats.mana
+                     }
+        self.images = {'lives': None,
+                       'collectables': None,
+                       'health': None,
+                       'mana': None
+                       }
+
+
 class Menu:
     def __init__(self):
         self.title_font = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 42)
