@@ -451,11 +451,10 @@ class Player(SpriteWithCoords):
     def __init__(self, x, y, game_map, screen):
         super().__init__(x, y)
         self.game_map = game_map
-        self.screen = screen
         self.movement = self.Movement(self)
         self.hitbox = self.Hitbox(self, x, y, 15, 32)
         self.image = pg.Surface([self.hitbox.width, self.hitbox.height])
-        self.sprites = Images(self, self.screen, 'player-spritesheet.png')
+        self.sprites = Images(self, screen, 'player-spritesheet.png')
         self.stats = self.Stats(self)
 
     def get_position(self):
