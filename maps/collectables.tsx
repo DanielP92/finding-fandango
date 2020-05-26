@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.2" tiledversion="1.3.4" name="collectables" tilewidth="13" tileheight="17" tilecount="21" columns="0">
+<tileset version="1.2" tiledversion="1.3.4" name="collectables" tilewidth="24" tileheight="28" tilecount="29" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0" type="healh-potion">
   <image width="13" height="17" source="../../../../../Downloads/Pirate Treasure/Sprites/Red Potion/01.png"/>
@@ -90,5 +90,39 @@
  </tile>
  <tile id="41" type="mana-potion">
   <image width="13" height="17" source="../../../../../Downloads/Pirate Treasure/Sprites/Blue Potion/07.png"/>
+ </tile>
+ <tile id="42" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/01.png"/>
+  <animation>
+   <frame tileid="42" duration="150"/>
+   <frame tileid="43" duration="150"/>
+   <frame tileid="44" duration="150"/>
+   <frame tileid="45" duration="150"/>
+   <frame tileid="46" duration="150"/>
+   <frame tileid="47" duration="150"/>
+   <frame tileid="48" duration="150"/>
+   <frame tileid="49" duration="150"/>
+  </animation>
+ </tile>
+ <tile id="43" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/02.png"/>
+ </tile>
+ <tile id="44" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/03.png"/>
+ </tile>
+ <tile id="45" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/04.png"/>
+ </tile>
+ <tile id="46" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/05.png"/>
+ </tile>
+ <tile id="47" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/06.png"/>
+ </tile>
+ <tile id="48" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/07.png"/>
+ </tile>
+ <tile id="49" type="1-up">
+  <image width="24" height="28" source="../../../../../Downloads/Pirate Treasure/Sprites/Golden Skull/08.png"/>
  </tile>
 </tileset>

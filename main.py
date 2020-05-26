@@ -282,6 +282,9 @@ class Map:
                     elif item.image and item.name == 'health-potion':
                         sprite = items.Restore(item.x, item.y, health=1)
                         sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == '1-up':
+                        sprite = items.OneUp(item.x, item.y)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
 
                     if sprite:
                         self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
