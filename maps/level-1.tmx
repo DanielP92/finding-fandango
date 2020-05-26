@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.3.4" orientation="orthogonal" renderorder="right-down" width="110" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="1">
+<map version="1.2" tiledversion="1.3.4" orientation="orthogonal" renderorder="right-down" width="110" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="16" nextobjectid="7">
  <tileset firstgid="1" source="tilesheet_grass.tsx"/>
  <tileset firstgid="225" source="tilesheet_grass-bg.tsx"/>
  <tileset firstgid="295" source="water-light-still.tsx"/>
  <tileset firstgid="299" source="tile_water-still_16x16_4-frames.tsx"/>
+ <tileset firstgid="303" source="collectables.tsx"/>
  <layer id="7" name="Background" width="110" height="50">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -328,4 +329,12 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="15" name="Items">
+  <object id="1" name="health-potion" gid="303" x="266.521" y="651.452" width="13" height="17"/>
+  <object id="2" name="all-potion" gid="331" x="434.575" y="440.248" width="13" height="17"/>
+  <object id="3" name="all-potion" gid="331" x="12.9251" y="323.67" width="13" height="17"/>
+  <object id="4" name="mana-potion" gid="338" x="657.891" y="730.18" width="13" height="17"/>
+  <object id="5" name="health-potion" gid="303" x="1153.73" y="782.413" width="13" height="17"/>
+  <object id="6" name="1-up" gid="345" x="458.098" y="661.237" width="24" height="28"/>
+ </objectgroup>
 </map>

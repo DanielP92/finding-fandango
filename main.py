@@ -41,7 +41,7 @@ class ParallaxBackground:
             filename = self.img_name + str(i) + '.png'
             sprite.image = pg.image.load(os.path.join(background_dir, filename))
             w, h = sprite.image.get_width(), sprite.image.get_height()
-            sprite.image = pg.transform.scale(sprite.image, (int(w / 1.2), int(h / 1.2)))
+            sprite.image = pg.transform.scale(sprite.image, (w, h))
             sprite.rect = sprite.image.get_rect()
             sprite.speed = x
             self.images.append(sprite)
@@ -180,18 +180,24 @@ class Map:
 
         def __init__(self):
             self.tiles = list()
+            self.objects = list()
             self.groups = {'background': pg.sprite.Group(),
                            'foreground': pg.sprite.Group(),
                            'water': pg.sprite.Group(),
-                           'decorations': pg.sprite.Group()
+                           'decorations': pg.sprite.Group(),
+                           'items': pg.sprite.Group()
                            }
             self.collisions = {'background': pg.sprite.Group(),
                                'foreground': pg.sprite.Group(),
                                }
 
-        def add_to(self, tile, group):
+        def add_to_tiles(self, tile, group):
             self.tiles.append(tile)
             group.add(tile)
+
+        def add_to_objects(self, item, group):
+            self.objects.append(item)
+            group.add(item)
 
     class Camera:
         def __init__(self, width, height):
@@ -231,37 +237,57 @@ class Map:
         def set_layers():
             tw = self.settings.tw
             th = self.settings.th
+            if isinstance(layer, pytmx.TiledTileLayer):
+                for x, y, gid, in layer:
+                    tile = self.file.get_tile_image_by_gid(gid)
+                    tile_sprite = None
+                    data = self.file.get_tile_properties_by_gid(gid)
+                    group = None
 
-            for x, y, gid, in layer:
-                tile = self.file.get_tile_image_by_gid(gid)
-                tile_sprite = None
-                data = self.file.get_tile_properties_by_gid(gid)
-                group = None
-
-                if layer.name not in LAYERS:
-                    raise LayerError(f'"{layer.name}" is an invalid layer name. Must be one of the following: {LAYERS}.')
-                else:
-                    if layer.name == "Background":
-                        if data and data['type'] == "walkable":
-                            tile_sprite = self.tiles.BackgroundTile(tile, x * tw, y * th, tw, th)
-                            group = self.tiles.groups['background']
-                        elif data and data['type'] == "fallable":
+                    if layer.name not in LAYERS:
+                        raise LayerError(f'"{layer.name}" is an invalid layer name. Must be one of the following: {LAYERS}.')
+                    else:
+                        if layer.name == "Background":
+                            if data and data['type'] == "walkable":
+                                tile_sprite = self.tiles.BackgroundTile(tile, x * tw, y * th, tw, th)
+                                group = self.tiles.groups['background']
+                            elif data and data['type'] == "fallable":
+                                tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
+                                group = self.tiles.groups['background']
+                        elif layer.name == "Foreground":
+                            tile_sprite = self.tiles.ForegroundTile(tile, x * tw, y * th, tw, th)
+                            group = self.tiles.groups['foreground']
+                        elif layer.name == 'Water':
+                            tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
+                            group = self.tiles.groups['water']
+                            if data:
+                                tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
+                        elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
                             tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
-                            group = self.tiles.groups['background']
-                    elif layer.name == "Foreground":
-                        tile_sprite = self.tiles.ForegroundTile(tile, x * tw, y * th, tw, th)
-                        group = self.tiles.groups['foreground']
-                    elif layer.name == 'Water':
-                        tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
-                        group = self.tiles.groups['water']
-                        if data:
-                            tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
-                    elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
-                        tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
-                        group = self.tiles.groups['decorations']
+                            group = self.tiles.groups['decorations']
 
-                    if tile and tile_sprite:
-                        self.tiles.add_to(tile_sprite, group)
+                        if tile and tile_sprite:
+                            self.tiles.add_to_tiles(tile_sprite, group)
+
+            elif isinstance(layer, pytmx.TiledObjectGroup):
+                for item in layer:
+                    sprite = None
+
+                    if item.image and item.name == 'all-potion':
+                        sprite = items.Restore(item.x, item.y, health=2, mana=10)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == 'mana-potion':
+                        sprite = items.Restore(item.x, item.y, mana=20)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == 'health-potion':
+                        sprite = items.Restore(item.x, item.y, health=1)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    elif item.image and item.name == '1-up':
+                        sprite = items.OneUp(item.x, item.y)
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+
+                    if sprite:
+                        self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
 
         for layer in self.file.visible_layers:
             set_layers()
@@ -279,6 +305,9 @@ class Map:
         for tile in self.tiles.tiles:
             screen.blit(tile.image, self.camera.apply(tile))
 
+        for item in self.tiles.objects:
+            screen.blit(item.image, self.camera.apply(item))
+
         if player.movement.flip:
             screen.blit(pg.transform.flip(player.image, True, False), self.camera.apply(player))
         else:
@@ -288,7 +317,14 @@ class Map:
 
 
 class Player(SpriteWithCoords):
-    alive = True
+
+    class Stats:
+        def __init__(self, player):
+            self.player = player
+            self.alive = True
+            self.lives = 5
+            self.mana = 20
+            self.collectables = 0
 
     class Movement:
         def __init__(self, player):
@@ -347,9 +383,11 @@ class Player(SpriteWithCoords):
             super().__init__(*args)
             self.player = player
             self.active = True
+            self.health = 5
 
         def update(self):
             self.platform_collisions()
+            self.item_collisions()
             self.enemy_collisions()
 
         def platform_collisions(self):
@@ -388,6 +426,15 @@ class Player(SpriteWithCoords):
 
                     self.player.movement.change_y = 0
 
+        def item_collisions(self):
+            item_list = self.player.game_map.tiles.groups['items']
+
+            for sprite in item_list:
+                if self.colliderect(sprite.rect):
+                    sprite.effect(self.player)
+                    sprite.kill()
+                    self.player.game_map.tiles.objects.remove(sprite)
+
         def enemy_collisions(self):
             if self.is_iframe():
                 print('invincible!')
@@ -402,6 +449,7 @@ class Player(SpriteWithCoords):
         self.hitbox = self.Hitbox(self, x, y, 15, 32)
         self.image = pg.Surface([self.hitbox.width, self.hitbox.height])
         self.sprites = Images(self, self.screen, 'player-spritesheet.png')
+        self.stats = self.Stats(self)
 
     def get_position(self):
         return self.hitbox.x, self.hitbox.y
@@ -410,6 +458,8 @@ class Player(SpriteWithCoords):
         self.hitbox.update()
         self.movement.update()
         self.sprites.update()
+        if self.stats.lives < 0:
+            self.stats.alive = False
 
 
 class Menu:
@@ -488,6 +538,7 @@ class Game:
             self.screen.blit(sky.convert_alpha(), (0, 0))
             self.current_map.draw(self.screen, self.player)
             self.current_map.tiles.groups['water'].update()
+            self.current_map.tiles.groups['items'].update()
             self.player.update()
             self.clock.tick(60)
             pg.display.flip()
