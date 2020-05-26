@@ -32,10 +32,15 @@ class Restore(Item):
         self.mana = mana
 
     def effect(self, player):
-        if player.hitbox.health + self.z > 5:
+        if player.hitbox.health + self.health > 5:
             player.hitbox.health = 5
-        elif player.health.health + self.z < 5:
-            player.hitbox.health += self.z
+        elif player.hitbox.health + self.health < 5:
+            player.hitbox.health += self.health
+
+        if player.stats.mana < 100:
+            player.stats.mana += self.mana
+        else:
+            pass
 
 
 class OneUp(Item):
