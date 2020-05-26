@@ -64,3 +64,11 @@ class Collectable(Item):
             player.stats.lives += 1
             player.hitbox.health = 5
             player.stats.collectables = 0
+
+    def update(self):
+        self.image = self.frames[self.step].convert_alpha()
+        self.counter += 1
+        if self.counter % 8 == 0:
+            self.step += 1
+        if self.step > len(self.frames) - 1:
+            self.step = 0
