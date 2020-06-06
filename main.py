@@ -332,11 +332,14 @@ class Player(SpriteWithCoords):
             self.collectables = 0
 
     class Movement:
+        max_jumps = 1
+
         def __init__(self, player):
             self.player = player
             self.flip = False
             self.change_x = 0
             self.change_y = 0
+            self.jump_count = self.max_jumps
 
         def animation_reset(func):
             def wrapper(self):
@@ -381,7 +384,9 @@ class Player(SpriteWithCoords):
 
         @animation_reset
         def jump(self):
-            self.change_y = -7
+            if self.jump_count:
+                self.jump_count -= 1
+                self.change_y = -7
 
     class Hitbox(BaseHitbox):
         max_health = 100
@@ -421,6 +426,7 @@ class Player(SpriteWithCoords):
                         self.top = sprite.rect.bottom
 
                     self.player.movement.change_y = 0
+                    self.player.movement.jump_count = self.player.movement.max_jumps
 
             background_tile_list = self.player.game_map.tiles.collisions['background']
 
@@ -432,6 +438,7 @@ class Player(SpriteWithCoords):
                         pass
 
                     self.player.movement.change_y = 0
+                    self.player.movement.jump_count = self.player.movement.max_jumps
 
         def item_collisions(self):
             item_list = self.player.game_map.tiles.groups['items']
