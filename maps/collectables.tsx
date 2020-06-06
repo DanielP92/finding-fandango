@@ -4,8 +4,8 @@
  <tile id="0" type="healh-potion">
   <image width="13" height="17" source="../../../../../Downloads/Pirate Treasure/Sprites/Red Potion/01.png"/>
   <animation>
-   <frame tileid="0" duration="150"/>
    <frame tileid="1" duration="150"/>
+   <frame tileid="0" duration="150"/>
    <frame tileid="2" duration="150"/>
    <frame tileid="3" duration="150"/>
    <frame tileid="4" duration="150"/>

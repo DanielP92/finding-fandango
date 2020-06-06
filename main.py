@@ -127,16 +127,6 @@ class Images:
 class Map:
     background = ParallaxBackground('vrstva-')
 
-    class Settings:
-        def __init__(self, file):
-            self.tw = file.tilewidth
-            self.th = file.tileheight
-            self.tw_count = file.width
-            self.th_count = file.height
-
-        def get_map_size(self):
-            return self.tw * self.tw_count, self.th * self.th_count
-
     class Tiles:
 
         class TileSprite(SpriteWithCoords):
@@ -226,22 +216,30 @@ class Map:
 
     def __init__(self, filename):
         self.file = pytmx.load_pygame(os.path.join(map_dir, filename))
-        self.settings = self.Settings(self.file)
+        self.settings = {'tw': self.file.tilewidth,
+                         'th': self.file.tileheight,
+                         'tw_count': self.file.width,
+                         'th_count': self.file.height}
+
         self.tiles = self.Tiles()
-        self.width, self.height = self.settings.get_map_size()
+        self.width, self.height = self.get_map_size()
         self.camera = self.Camera(self.width, self.height)
         self.set_map()
+
+    def get_map_size(self):
+        return self.settings['tw'] * self.settings['tw_count'], self.settings['th'] * self.settings['th_count']
 
     def set_map(self):
 
         def set_layers():
-            tw = self.settings.tw
-            th = self.settings.th
+            tw = self.settings['tw']
+            th = self.settings['th']
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid, in layer:
                     tile = self.file.get_tile_image_by_gid(gid)
                     tile_sprite = None
                     data = self.file.get_tile_properties_by_gid(gid)
+                    position = x * tw, y * th, tw, th
                     group = None
 
                     if layer.name not in LAYERS:
@@ -249,21 +247,21 @@ class Map:
                     else:
                         if layer.name == "Background":
                             if data and data['type'] == "walkable":
-                                tile_sprite = self.tiles.BackgroundTile(tile, x * tw, y * th, tw, th)
+                                tile_sprite = self.tiles.BackgroundTile(tile, *position)
                                 group = self.tiles.groups['background']
                             elif data and data['type'] == "fallable":
-                                tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
+                                tile_sprite = self.tiles.TileSprite(tile, *position)
                                 group = self.tiles.groups['background']
                         elif layer.name == "Foreground":
-                            tile_sprite = self.tiles.ForegroundTile(tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.ForegroundTile(tile, *position)
                             group = self.tiles.groups['foreground']
                         elif layer.name == 'Water':
-                            tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.WaterTile(data, tile, *position)
                             group = self.tiles.groups['water']
                             if data:
                                 tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
                         elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
-                            tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.TileSprite(tile, *position)
                             group = self.tiles.groups['decorations']
 
                         if tile and tile_sprite:
@@ -271,28 +269,24 @@ class Map:
 
             elif isinstance(layer, pytmx.TiledObjectGroup):
                 for item in layer:
+                    position = item.x, item.y
                     sprite = None
 
-                    if item.image and item.name == 'all-potion':
-                        sprite = items.Restore(item.x, item.y, health=2, mana=10)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'mana-potion':
-                        sprite = items.Restore(item.x, item.y, mana=20)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'health-potion':
-                        sprite = items.Restore(item.x, item.y, health=1)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == '1-up':
-                        sprite = items.OneUp(item.x, item.y)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'coin-silver':
-                        sprite = items.Collectable(item.x, item.y)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'coin-gold':
-                        sprite = items.Collectable(item.x, item.y, z=2)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    if item.name == 'all-potion':
+                        sprite = items.Restore(*position, health=2, mana=10)
+                    elif item.name == 'mana-potion':
+                        sprite = items.Restore(*position, mana=20)
+                    elif item.name == 'health-potion':
+                        sprite = items.Restore(*position, health=1)
+                    elif item.name == '1-up':
+                        sprite = items.OneUp(*position)
+                    elif item.name == 'coin-silver':
+                        sprite = items.Collectable(*position)
+                    elif item.name == 'coin-gold':
+                        sprite = items.Collectable(*position, z=2)
 
                     if sprite:
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
                         self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
 
         for layer in self.file.visible_layers:
@@ -469,17 +463,22 @@ class Player(SpriteWithCoords):
 
 
 class StatDisplay:
+    dict_keys = ['lives', 'collectables', 'health', 'mana']
+
     def __init__(self, player):
-        self.dict = {'lives': player.stats.lives,
-                     'collectables': player.stats.collectables
-                     'health': player.hitbox.health,
-                     'mana': player.stats.mana
-                     }
-        self.images = {'lives': None,
-                       'collectables': None,
-                       'health': None,
-                       'mana': None
-                       }
+        self.player = player
+        self.stat_dict = {}
+        self.images = {}
+
+    def set_images(self):
+        pass
+
+    def update(self):
+        dict_values = [self.player.stats.lives, self.player.stats.collectables,
+                       self.player.hitbox.health, self.player.stats.mana]
+
+        for key, value in zip(self.dict_keys, dict_values):
+            self.stat_dict.update({key: value})
 
 
 class Menu:
@@ -522,6 +521,7 @@ class Game:
     def __init__(self):
         self.current_map = self.all_maps[self.current_map_no]
         self.player = Player(50, 500, self.current_map, self.screen)
+        self.ui_display = StatDisplay(self.player)
         self.clock = pg.time.Clock()
         self.menu = Menu()
 
@@ -560,6 +560,7 @@ class Game:
             self.current_map.tiles.groups['water'].update()
             self.current_map.tiles.groups['items'].update()
             self.player.update()
+            self.ui_display.update()
             self.clock.tick(60)
             pg.display.flip()
 
