@@ -18,6 +18,9 @@ asset_dir = os.path.join(current_dir, 'assets/')
 font_dir = os.path.join(asset_dir, 'fonts/')
 background_dir = os.path.join(map_dir, 'background/')
 
+pg.init()
+
+LABEL_FONT = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 18)
 
 class ParallaxBackground:
 
@@ -127,16 +130,6 @@ class Images:
 class Map:
     background = ParallaxBackground('vrstva-')
 
-    class Settings:
-        def __init__(self, file):
-            self.tw = file.tilewidth
-            self.th = file.tileheight
-            self.tw_count = file.width
-            self.th_count = file.height
-
-        def get_map_size(self):
-            return self.tw * self.tw_count, self.th * self.th_count
-
     class Tiles:
 
         class TileSprite(SpriteWithCoords):
@@ -226,22 +219,30 @@ class Map:
 
     def __init__(self, filename):
         self.file = pytmx.load_pygame(os.path.join(map_dir, filename))
-        self.settings = self.Settings(self.file)
+        self.settings = {'tw': self.file.tilewidth,
+                         'th': self.file.tileheight,
+                         'tw_count': self.file.width,
+                         'th_count': self.file.height}
+
         self.tiles = self.Tiles()
-        self.width, self.height = self.settings.get_map_size()
+        self.width, self.height = self.get_map_size()
         self.camera = self.Camera(self.width, self.height)
         self.set_map()
+
+    def get_map_size(self):
+        return self.settings['tw'] * self.settings['tw_count'], self.settings['th'] * self.settings['th_count']
 
     def set_map(self):
 
         def set_layers():
-            tw = self.settings.tw
-            th = self.settings.th
+            tw = self.settings['tw']
+            th = self.settings['th']
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid, in layer:
                     tile = self.file.get_tile_image_by_gid(gid)
                     tile_sprite = None
                     data = self.file.get_tile_properties_by_gid(gid)
+                    position = x * tw, y * th, tw, th
                     group = None
 
                     if layer.name not in LAYERS:
@@ -249,21 +250,21 @@ class Map:
                     else:
                         if layer.name == "Background":
                             if data and data['type'] == "walkable":
-                                tile_sprite = self.tiles.BackgroundTile(tile, x * tw, y * th, tw, th)
+                                tile_sprite = self.tiles.BackgroundTile(tile, *position)
                                 group = self.tiles.groups['background']
                             elif data and data['type'] == "fallable":
-                                tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
+                                tile_sprite = self.tiles.TileSprite(tile, *position)
                                 group = self.tiles.groups['background']
                         elif layer.name == "Foreground":
-                            tile_sprite = self.tiles.ForegroundTile(tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.ForegroundTile(tile, *position)
                             group = self.tiles.groups['foreground']
                         elif layer.name == 'Water':
-                            tile_sprite = self.tiles.WaterTile(data, tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.WaterTile(data, tile, *position)
                             group = self.tiles.groups['water']
                             if data:
                                 tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
                         elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
-                            tile_sprite = self.tiles.TileSprite(tile, x * tw, y * th, tw, th)
+                            tile_sprite = self.tiles.TileSprite(tile, *position)
                             group = self.tiles.groups['decorations']
 
                         if tile and tile_sprite:
@@ -271,28 +272,24 @@ class Map:
 
             elif isinstance(layer, pytmx.TiledObjectGroup):
                 for item in layer:
+                    position = item.x, item.y
                     sprite = None
 
-                    if item.image and item.name == 'all-potion':
-                        sprite = items.Restore(item.x, item.y, health=2, mana=10)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'mana-potion':
-                        sprite = items.Restore(item.x, item.y, mana=20)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'health-potion':
-                        sprite = items.Restore(item.x, item.y, health=1)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == '1-up':
-                        sprite = items.OneUp(item.x, item.y)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'coin-silver':
-                        sprite = items.Collectable(item.x, item.y)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                    elif item.image and item.name == 'coin-gold':
-                        sprite = items.Collectable(item.x, item.y, z=2)
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                    if item.name == 'all-potion':
+                        sprite = items.Restore(*position, health=35, mana=35)
+                    elif item.name == 'mana-potion':
+                        sprite = items.Restore(*position, mana=20)
+                    elif item.name == 'health-potion':
+                        sprite = items.Restore(*position, health=20)
+                    elif item.name == '1-up':
+                        sprite = items.OneUp(*position)
+                    elif item.name == 'coin-silver':
+                        sprite = items.Collectable(*position)
+                    elif item.name == 'coin-gold':
+                        sprite = items.Collectable(*position, z=2)
 
                     if sprite:
+                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
                         self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
 
         for layer in self.file.visible_layers:
@@ -325,6 +322,8 @@ class Map:
 class Player(SpriteWithCoords):
 
     class Stats:
+        max_mana = 100
+
         def __init__(self, player):
             self.player = player
             self.alive = True
@@ -385,11 +384,13 @@ class Player(SpriteWithCoords):
             self.change_y = -7
 
     class Hitbox(BaseHitbox):
+        max_health = 100
+
         def __init__(self, player, *args):
             super().__init__(*args)
             self.player = player
             self.active = True
-            self.health = 5
+            self.health = 68
 
         def update(self):
             self.platform_collisions()
@@ -468,6 +469,97 @@ class Player(SpriteWithCoords):
             self.stats.alive = False
 
 
+class Label(pg.sprite.Sprite):
+
+    def __init__(self, display_value):
+        super().__init__()
+        self.image = LABEL_FONT.render(str(display_value), True, (0, 0, 0))
+
+
+class StatDisplay:
+    dict_keys = ['lives', 'collectables', 'health', 'mana']
+    font = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 15)
+
+    def __init__(self, player, screen):
+        self.player = player
+        self.screen = screen
+        self.image = pg.Surface([SCREEN_W, SCREEN_H], pg.SRCALPHA, 32)
+        self.properties = {'stats': {},
+                           'images': {},
+                           'labels': {}}
+
+        self.set_images()
+
+    def get_health_increment(self):
+        return max(SCREEN_W / 3, self.player.hitbox.max_health) / min(SCREEN_W / 3, self.player.hitbox.max_health)
+
+    def get_mana_increment(self):
+        return max(SCREEN_W / 3, self.player.stats.max_mana) / min(SCREEN_W / 3, self.player.stats.max_mana)
+
+    def set_images(self):
+        dict_values = [pg.image.load(os.path.join(asset_dir, 'ui-lives.png')),
+                       pg.image.load(os.path.join(asset_dir, 'ui-coins.png')),
+                       pg.image.load(os.path.join(asset_dir, 'ui-health.png')),
+                       pg.image.load(os.path.join(asset_dir, 'ui-mana.png'))]
+
+        for key, value in zip(self.dict_keys, dict_values):
+            self.properties['images'].update({key: value})
+
+    def set_labels(self):
+        dict_values = [Label(self.player.stats.lives), Label(self.player.stats.collectables),
+                       Label(self.player.hitbox.health), Label(self.player.stats.mana)]
+
+        for key, value in zip(self.dict_keys, dict_values):
+            self.properties['labels'].update({key: value})
+
+    def update(self):
+        dict_values = [self.player.stats.lives, self.player.stats.collectables,
+                       self.player.hitbox.health, self.player.stats.mana]
+
+        for key, value in zip(self.dict_keys, dict_values):
+            self.properties['stats'].update({key: value})
+
+        self.set_labels()
+        self.draw()
+
+    def draw(self):
+        bar_length = SCREEN_W / 3
+
+        # set health bar
+        base_health_bar = pg.Rect(38, 13, bar_length + 4, 19)
+        health_bar = pg.Rect(40, 15, bar_length, 15)
+        health_bar.width = self.get_health_increment() * self.player.hitbox.health
+
+        # set mana bar
+        base_mana_bar = pg.Rect(SCREEN_W - 40 - bar_length, 13, bar_length + 4, 19)
+        mana_bar = pg.Rect(SCREEN_W - 38 - bar_length, 15, bar_length, 15)
+        mana_bar.width = self.get_mana_increment() * self.player.stats.mana
+
+        # draw health and mana bars
+        pg.draw.rect(self.image, (0, 0, 0), base_health_bar)
+        pg.draw.rect(self.image, (235, 100, 100), health_bar)
+        pg.draw.rect(self.image, (0, 0, 0), base_mana_bar)
+        pg.draw.rect(self.image, (100, 100, 235), mana_bar)
+
+        # set labels
+        health_label = self.properties['labels']['health'].image
+        mana_label = self.properties['labels']['mana'].image
+        oneup_label = self.properties['labels']['lives'].image
+        coin_label = self.properties['labels']['collectables'].image
+
+        # blit stat images to self.image
+        self.image.blit(pg.transform.scale(self.properties['images']['health'], (31, 37)), (0, 0))
+        self.image.blit(pg.transform.scale(self.properties['images']['mana'], (31, 37)), ((SCREEN_W - 37), 0))
+        self.image.blit(pg.transform.scale(self.properties['images']['lives'], (31, 37)), (0, (SCREEN_H - 40)))
+        self.image.blit(pg.transform.scale(self.properties['images']['collectables'], (30, 30)), ((SCREEN_W - 36), (SCREEN_H - 30)))
+
+        # blit labels to screen
+        self.screen.blit(health_label, (SCREEN_W / 2 - (health_label.get_width() + 75), 14))
+        self.screen.blit(mana_label, (SCREEN_W / 2 + 75, 14))
+        self.screen.blit(oneup_label, (38, SCREEN_H - 23))
+        self.screen.blit(coin_label, (SCREEN_W - (38 + coin_label.get_width()), SCREEN_H - 23))
+
+
 class Menu:
     def __init__(self):
         self.title_font = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 42)
@@ -499,7 +591,6 @@ class Menu:
 
 
 class Game:
-    pg.init()
     screen = pg.display.set_mode((SCREEN_W, SCREEN_H), pg.SCALED, 32)
     all_maps = [Map('level-1.tmx')]
     current_map_no = 0
@@ -508,6 +599,7 @@ class Game:
     def __init__(self):
         self.current_map = self.all_maps[self.current_map_no]
         self.player = Player(50, 500, self.current_map, self.screen)
+        self.ui_display = StatDisplay(self.player, self.screen)
         self.clock = pg.time.Clock()
         self.menu = Menu()
 
@@ -543,9 +635,11 @@ class Game:
             self.check_all_events()
             self.screen.blit(sky.convert_alpha(), (0, 0))
             self.current_map.draw(self.screen, self.player)
+            self.screen.blit(self.ui_display.image, (0, 0))
             self.current_map.tiles.groups['water'].update()
             self.current_map.tiles.groups['items'].update()
             self.player.update()
+            self.ui_display.update()
             self.clock.tick(60)
             pg.display.flip()
 

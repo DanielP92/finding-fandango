@@ -32,15 +32,15 @@ class Restore(Item):
         self.mana = mana
 
     def effect(self, player):
-        if player.hitbox.health + self.health > 5:
-            player.hitbox.health = 5
-        elif player.hitbox.health + self.health < 5:
+        if player.hitbox.health + self.health > player.hitbox.max_health:
+            player.hitbox.health = player.hitbox.max_health
+        elif player.hitbox.health + self.health < player.hitbox.max_health:
             player.hitbox.health += self.health
 
-        if player.stats.mana < 100:
+        if player.stats.mana + self.mana > player.stats.max_mana:
+            player.stats.mana = player.stats.max_mana
+        elif player.stats.mana + self.mana < player.stats.max_mana:
             player.stats.mana += self.mana
-        else:
-            pass
 
 
 class OneUp(Item):
@@ -49,7 +49,7 @@ class OneUp(Item):
 
     def effect(self, player):
         player.stats.lives += 1
-        player.hitbox.health = 5
+        player.hitbox.health = player.hitbox.max_health
 
 
 class Collectable(Item):
@@ -62,7 +62,7 @@ class Collectable(Item):
             player.stats.collectables += self.z
         elif player.stats.collectables >= 100:
             player.stats.lives += 1
-            player.hitbox.health = 5
+            player.hitbox.health = player.hitbox.max_health
             player.stats.collectables = 0
 
     def update(self):
