@@ -6,10 +6,12 @@ from base_classes import SpriteWithCoords, BaseHitbox
 import items
 
 # constants
-SCREEN_H = 500
-SCREEN_W = 850
+SCREEN_H = 768
+SCREEN_W = 1366
 TERMINAL_VEL = 10
 LAYERS = ["Background", "Foreground", "Water", "Decorations", "TreeTrunk", "TreeTop"]
+ITEM_NAMES = ['all-potion', 'mana-potion', 'health-potion', '1-up', 'coin-silver', 'coin-gold']
+BG_IMG_NAME = 'vrstva-'
 
 # directories
 current_dir = os.path.dirname('main.py')
@@ -22,32 +24,41 @@ pg.init()
 
 LABEL_FONT = pg.font.Font(os.path.join(font_dir, 'SquadaOne-Regular.ttf'), 18)
 
+
+class BackgroundSprite(SpriteWithCoords):
+    def __init__(self, x, y, spd, filename):
+        super().__init__(x, y)
+        self.speed = spd         # larger speed = slower movement, negative speed will move sprites backwards
+        self.filename = filename
+        self.image = pg.image.load(os.path.join(background_dir, self.filename))
+        self.image = pg.transform.scale(self.image, (int(self.get_size()[0] * 0.65), int(self.get_size()[1] * 0.65)))
+        self.width, self.height = self.get_size()
+        self.rect = pg.Rect(self.x, self.y, self.width, self.height)
+
+    def get_size(self):
+        return self.image.get_width(), self.image.get_height()
+
+
 class ParallaxBackground:
-
-    class BackgroundSprite(SpriteWithCoords):
-        def __init__(self, x, y):
-            super().__init__(x, y)
-            self.image = pg.Surface((0, 0))
-            self.rect = self.image.get_rect()
-            self.speed = 0  # larger speed = slower movement, negative speed will move sprites backwards
-
-    def __init__(self, img_name):
+    def __init__(self, img_name, game_map):
         self.img_name = img_name
+        self.game_map = game_map
         self.images = []
         self.get_image_files()
 
     def get_image_files(self):
-        x = 7
+        spd = 4
+
         for i in range(6):
-            x -= 1
-            sprite = self.BackgroundSprite(0, 0)
-            filename = self.img_name + str(i) + '.png'
-            sprite.image = pg.image.load(os.path.join(background_dir, filename))
-            w, h = sprite.image.get_width(), sprite.image.get_height()
-            sprite.image = pg.transform.scale(sprite.image, (w, h))
-            sprite.rect = sprite.image.get_rect()
-            sprite.speed = x
-            self.images.append(sprite)
+            spd -= 0.5
+            filename = BG_IMG_NAME + str(i) + '.png'
+            sprite = BackgroundSprite(0, 0, spd, filename)
+            repeater = int((self.game_map.width / (sprite.width * sprite.speed)) + 1)
+
+            for i in range(repeater):
+                x = sprite.width * i
+                extra_sprite = BackgroundSprite(x, 0, spd, filename)
+                self.images.append(extra_sprite)
 
 
 class LayerError(Exception):
@@ -128,7 +139,6 @@ class Images:
 
 
 class Map:
-    background = ParallaxBackground('vrstva-')
 
     class Tiles:
 
@@ -200,11 +210,9 @@ class Map:
 
         def apply(self, entity):
             if isinstance(entity, Player):
-                x = (entity.hitbox.x + (entity.hitbox.width / 2)) - (entity.image.get_width() / 2)
-                y = entity.hitbox.y - 40
                 return entity.hitbox.move((self.camera.topleft[0] + entity.sprites.get_offset()[0], self.camera.topleft[1] + entity.sprites.get_offset()[1]))
-            elif isinstance(entity, ParallaxBackground.BackgroundSprite):
-                return entity.rect.move((self.camera.bottomleft[0] / entity.speed, self.camera.bottomleft[1] / entity.speed))
+            elif isinstance(entity, BackgroundSprite):
+                return entity.rect.move((self.camera.topleft[0] / (entity.speed + 1), (self.camera.bottomleft[1] - entity.image.get_height())))
             else:
                 return entity.rect.move(self.camera.topleft)
 
@@ -219,13 +227,15 @@ class Map:
 
     def __init__(self, filename):
         self.file = pytmx.load_pygame(os.path.join(map_dir, filename))
-        self.settings = {'tw': self.file.tilewidth,
+        self.settings = {'background': None,
+                         'tw': self.file.tilewidth,
                          'th': self.file.tileheight,
                          'tw_count': self.file.width,
                          'th_count': self.file.height}
 
         self.tiles = self.Tiles()
         self.width, self.height = self.get_map_size()
+        self.settings.update({'background': ParallaxBackground('vrstva-', self)})
         self.camera = self.Camera(self.width, self.height)
         self.set_map()
 
@@ -233,14 +243,18 @@ class Map:
         return self.settings['tw'] * self.settings['tw_count'], self.settings['th'] * self.settings['th_count']
 
     def set_map(self):
+        tw = self.settings['tw']
+        th = self.settings['th']
+        restore = items.Restore
+        one_up = items.OneUp
+        coin = items.Collectable
 
         def set_layers():
-            tw = self.settings['tw']
-            th = self.settings['th']
+
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid, in layer:
                     tile = self.file.get_tile_image_by_gid(gid)
-                    tile_sprite = None
+                    sprite = None
                     data = self.file.get_tile_properties_by_gid(gid)
                     position = x * tw, y * th, tw, th
                     group = None
@@ -250,47 +264,39 @@ class Map:
                     else:
                         if layer.name == "Background":
                             if data and data['type'] == "walkable":
-                                tile_sprite = self.tiles.BackgroundTile(tile, *position)
+                                sprite = self.tiles.BackgroundTile(tile, *position)
                                 group = self.tiles.groups['background']
                             elif data and data['type'] == "fallable":
-                                tile_sprite = self.tiles.TileSprite(tile, *position)
+                                sprite = self.tiles.TileSprite(tile, *position)
                                 group = self.tiles.groups['background']
                         elif layer.name == "Foreground":
-                            tile_sprite = self.tiles.ForegroundTile(tile, *position)
+                            sprite = self.tiles.ForegroundTile(tile, *position)
                             group = self.tiles.groups['foreground']
                         elif layer.name == 'Water':
-                            tile_sprite = self.tiles.WaterTile(data, tile, *position)
+                            sprite = self.tiles.WaterTile(data, tile, *position)
                             group = self.tiles.groups['water']
                             if data:
-                                tile_sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
+                                sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in data['frames']]
                         elif layer.name in ['Decorations', "TreeTrunk", "TreeTop"]:
-                            tile_sprite = self.tiles.TileSprite(tile, *position)
+                            sprite = self.tiles.TileSprite(tile, *position)
                             group = self.tiles.groups['decorations']
 
-                        if tile and tile_sprite:
-                            self.tiles.add_to_tiles(tile_sprite, group)
+                        if tile and sprite:
+                            self.tiles.add_to_tiles(sprite, group)
 
             elif isinstance(layer, pytmx.TiledObjectGroup):
                 for item in layer:
                     position = item.x, item.y
                     sprite = None
 
-                    if item.name == 'all-potion':
-                        sprite = items.Restore(*position, health=35, mana=35)
-                    elif item.name == 'mana-potion':
-                        sprite = items.Restore(*position, mana=20)
-                    elif item.name == 'health-potion':
-                        sprite = items.Restore(*position, health=20)
-                    elif item.name == '1-up':
-                        sprite = items.OneUp(*position)
-                    elif item.name == 'coin-silver':
-                        sprite = items.Collectable(*position)
-                    elif item.name == 'coin-gold':
-                        sprite = items.Collectable(*position, z=2)
+                    item_sprites = [restore(*position, health=35, mana=35), restore(*position, mana=20),
+                                    restore(*position, health=20), one_up(*position), coin(*position), coin(*position, z=2)]
 
-                    if sprite:
-                        sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
-                        self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
+                    for key, value in zip(ITEM_NAMES, item_sprites):
+                        if item.name == key:
+                            sprite = value
+                            sprite.frames = [self.file.get_tile_image_by_gid(x.gid) for x in item.properties['frames']]
+                            self.tiles.add_to_objects(sprite, self.tiles.groups['items'])
 
         for layer in self.file.visible_layers:
             set_layers()
@@ -301,20 +307,36 @@ class Map:
         for sprite in self.tiles.groups['foreground']:
             self.tiles.collisions['foreground'].add(sprite)
 
+    def draw_background(self, screen):
+        cam = self.camera.camera
+
+        for sprite in self.settings['background'].images:
+            camera_left = max(self.camera.camera.topleft[0], 1)
+            move_ratio = 1 / (camera_left / (camera_left / (sprite.speed + 1)))
+            if not move_ratio:
+                move_ratio = 1
+
+            def on_screen(x):
+                left_on_screen = 0 <= x.left + (cam.left * (move_ratio)) <= SCREEN_W
+                right_on_screen = 0 <= x.right + (cam.left * (move_ratio)) <= SCREEN_W
+                return bool((left_on_screen or right_on_screen))
+
+            if on_screen(sprite.rect):
+                screen.blit(sprite.image.convert_alpha(), self.camera.apply(sprite))
+
     def draw(self, screen, player):
-        for sprite in self.background.images:
-            screen.blit(sprite.image.convert_alpha(), self.camera.apply(sprite))
+        self.draw_background(screen)
 
         for tile in self.tiles.tiles:
-            screen.blit(tile.image, self.camera.apply(tile))
+            screen.blit(tile.image.convert_alpha(), self.camera.apply(tile))
 
         for item in self.tiles.objects:
-            screen.blit(item.image, self.camera.apply(item))
+            screen.blit(item.image.convert_alpha(), self.camera.apply(item))
 
         if player.movement.flip:
-            screen.blit(pg.transform.flip(player.image, True, False), self.camera.apply(player))
+            screen.blit(pg.transform.flip(player.image.convert_alpha(), True, False), self.camera.apply(player))
         else:
-            screen.blit(player.image, self.camera.apply(player))
+            screen.blit(player.image.convert_alpha(), self.camera.apply(player))
 
         self.camera.update(player)
 
@@ -498,10 +520,10 @@ class StatDisplay:
         self.set_images()
 
     def get_health_increment(self):
-        return max(SCREEN_W / 3, self.player.hitbox.max_health) / min(SCREEN_W / 3, self.player.hitbox.max_health)
+        return (SCREEN_W / 3) / self.player.hitbox.max_health
 
     def get_mana_increment(self):
-        return max(SCREEN_W / 3, self.player.stats.max_mana) / min(SCREEN_W / 3, self.player.stats.max_mana)
+        return (SCREEN_W / 3) / self.player.stats.max_mana
 
     def set_images(self):
         dict_values = [pg.image.load(os.path.join(asset_dir, 'ui-lives.png')),
@@ -601,6 +623,7 @@ class Game:
     screen = pg.display.set_mode((SCREEN_W, SCREEN_H), pg.SCALED, 32)
     all_maps = [Map('level-1.tmx')]
     current_map_no = 0
+    sky = pg.transform.scale(pg.image.load(os.path.join(background_dir, '1.png')).convert_alpha(), (SCREEN_W, SCREEN_H))
     done = False
 
     def __init__(self):
@@ -634,21 +657,25 @@ class Game:
             if event.key == pg.K_RIGHT and self.player.movement.change_x > 0:
                 self.player.movement.stop()
 
+    def update(self):
+        self.current_map.tiles.groups['water'].update()
+        self.current_map.tiles.groups['items'].update()
+        self.player.update()
+        self.ui_display.update()
+        self.clock.tick(60)
+        pg.display.flip()
+
+    def draw(self):
+        self.screen.blit(self.sky, (0, 0))
+        self.current_map.draw(self.screen, self.player)
+        self.screen.blit(self.ui_display.image, (0, 0))
+
     def main_loop(self):
-        sky = pg.image.load(os.path.join(background_dir, '1.png'))
-        sky = pg.transform.scale(sky, (SCREEN_W, SCREEN_H))
         self.menu.title_screen(self.screen)
         while not self.done:
             self.check_all_events()
-            self.screen.blit(sky.convert_alpha(), (0, 0))
-            self.current_map.draw(self.screen, self.player)
-            self.screen.blit(self.ui_display.image, (0, 0))
-            self.current_map.tiles.groups['water'].update()
-            self.current_map.tiles.groups['items'].update()
-            self.player.update()
-            self.ui_display.update()
-            self.clock.tick(60)
-            pg.display.flip()
+            self.draw()
+            self.update()
 
 
 g = Game()
