@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import pygame as pg
 import pytmx
 from base_classes import SpriteWithCoords, BaseHitbox
@@ -53,7 +54,12 @@ class ParallaxBackground:
             spd -= 0.5
             filename = BG_IMG_NAME + str(i) + '.png'
             sprite = BackgroundSprite(0, 0, spd, filename)
-            repeater = int((self.game_map.width / (sprite.width * sprite.speed)) + 1)
+            camera_left = max(self.game_map.camera.camera.topleft[0], 1)
+            ratio = -(1 / (camera_left / (camera_left / (sprite.speed + 1))) - 1) + 1      # inverse of camera move_ratio + 1; used to get implied width of sprite
+            new_width = (sprite.width * ratio)
+            widths = self.game_map.width, new_width
+            repeater = math.ceil(max(*widths) / min(*widths))
+            print("full_width:", (new_width * repeater) > self.game_map.width)              # to check if all background layers span full width of the map
 
             for i in range(repeater):
                 x = sprite.width * i
@@ -235,8 +241,8 @@ class Map:
 
         self.tiles = self.Tiles()
         self.width, self.height = self.get_map_size()
-        self.settings.update({'background': ParallaxBackground('vrstva-', self)})
         self.camera = self.Camera(self.width, self.height)
+        self.settings.update({'background': ParallaxBackground('vrstva-', self)})
         self.set_map()
 
     def get_map_size(self):
